@@ -32,6 +32,14 @@
         gtag('config', 'UA-97476543-1');
     </script>
 
+    <!-- enable math -->
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript"
+        src="http://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+
 </head>
 
 <body>
@@ -52,26 +60,125 @@
 
     <h1>Abstract</h1>
     <p style="width: 80%;text-align: justify">
-        Precise and controllable image editing is a challenging task that has attracted significant attention.
-        Recently, DragGAN enables an interactive point-based image editing framework and achieves impressive
-        editing results with pixel-level precision.
-        However, since this method is based on generative adversarial networks (GAN),
-        its generality is upper-bounded by the capacity of the pre-trained GAN models.
-        In this work, we extend such an editing framework to diffusion models and
-        propose DragDiffusion. By leveraging large-scale pretrained diffusion models,
-        we greatly improve the applicability of interactive point-based editing in real world scenarios.
-        While most existing diffusion-based image editing methods work on text embeddings,
-        DragDiffusion optimizes the diffusion latent to achieve precise spatial control.
-        Although diffusion models generate images in an iterative manner,
-        we empirically show that optimizing diffusion latent at one single step suffices to
-        generate coherent results, enabling DragDiffusion to complete high-quality editing efficiently.
-        Extensive experiments across a wide range of challenging cases
-        (e.g., multi-objects, diverse object categories, various styles, etc.)
-        demonstrate the versatility and generality of DragDiffusion.
+        Accurate and controllable image editing is a challenging task that has attracted significant attention recently.
+        Notably, DragGAN developed by Pan et al (2023) is an interactive point-based image editing framework that achieves
+        impressive editing results with pixel-level precision. However, due to its reliance on generative adversarial networks (GANs),
+        its generality is limited by the capacity of pretrained GAN models.
+        In this work, we extend this editing framework to diffusion models and propose a novel approach DragDiffusion.
+        By harnessing large-scale pretrained diffusion models, we greatly enhance the applicability of interactive point-based editing
+        on both real and diffusion-generated images.
+        Unlike other diffusion-based editing methods that provide guidance on diffusion latents of multiple time steps,
+        our approach achieves efficient yet accurate spatial control by optimizing the latent of only one time step.
+        This novel design is motivated by our observations that UNet features at a specific time step provides
+        sufficient semantic and geometric information to support the drag-based editing.
+        Moreover, we introduce two additional techniques, namely identity-preserving fine-tuning and reference-latent-control,
+        to further preserve the identity of the original image.
+        Lastly, we present a challenging benchmark dataset called DragBench---the first benchmark to evaluate
+        the performance of interactive point-based image editing methods.
+        Experiments across a wide range of challenging cases
+        (e.g., images with multiple objects, diverse object categories, various styles, etc.)
+        demonstrate the versatility and generality of DragDiffusion. The code and the DragBench dataset will be released.
     </p>
+    <br>
+
+    <hr>
+    <br>
+    <h1>Motivation</h1>
+    <div class="img-with-text">
+        <img width="700" src="./drag_diffusion_resources/motivation_fig_v3.jpg"/>
+    </div>
+    <br><br>
+    <p style="width: 80%;text-align: justify">
+        Given two frames from a video simulating the original
+        and the "dragged" images,
+        we visualize the UNet feature maps of different diffusion steps
+        using principal component analysis (PCA).
+        We find that there exists a single diffusion step
+        (e.g., t=35 in this case) such that the UNet feature maps
+        at this step alone contains sufficient semantic and geometric information
+        to support structure-oriented spatial control such as drag-based editing.
+        This observation motivates our novel method design
+        of optimizing the diffusion latent of only one time step.
+    </p>
+    <br>
+    <hr>
+
+    <h1>Method</h1>
+    <div class="img-with-text">
+        <img width="900" src="./drag_diffusion_resources/method_overview.jpg"/>
+    </div>
+    <br><br>
+    <p style="width: 80%;text-align: justify">
+        Our approach constitutes three steps:
+        (1) we conduct identity-preserving fine-tuning on the UNet of the
+        diffusion model given the input image;
+        (2) according to the user's dragging instruction,
+        we optimize the latent obtained from DDIM inversion on the input image.
+        (3) we apply DDIM denoising guided by our reference-latent-control
+        on $\hat{z}_{t}$ to obtain the final editing result $\hat{z}_{0}$.
+    </p>
+    <br>
+    <hr>
+
+    <h1>Dragging Trajectories (Real Images)</h1>
+    <div class="img-with-text">
+        <figcaption style="font-size:20px">user edit</figcaption>
+        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_dog.png"/>
+    </div>
+    <div class="img-with-text">
+        <figcaption style="font-size:20px">user edit</figcaption>
+        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_sculpture.png"/>
+    </div>
+    <div class="img-with-text">
+        <figcaption style="font-size:20px">user edit</figcaption>
+        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_oilpaint.png"/>
+    </div>
+    <div class="img-with-text">
+        <figcaption style="font-size:20px">user edit</figcaption>
+        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_oilpaint_mountain.png"/>
+    </div>
+    <div class="img-with-text">
+        <figcaption style="font-size:20px">user edit</figcaption>
+        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_cat_dog.png"/>
+    </div>
 
     <br><br>
+
+    <div class="video-with-text">
+        <figcaption style="font-size:20px">dragging trajectory</figcaption>
+        <video width="200" height="200" controls>
+            <source src="./drag_diffusion_resources/dog.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="video-with-text">
+        <figcaption style="font-size:20px">dragging trajectory</figcaption>
+        <video width="200" height="200" controls>
+            <source src="./drag_diffusion_resources/sculpture.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="video-with-text">
+        <figcaption style="font-size:20px">dragging trajectory</figcaption>
+        <video width="200" height="200" controls>
+            <source src="./drag_diffusion_resources/oilpaint_shorter.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="video-with-text">
+        <figcaption style="font-size:20px">dragging trajectory</figcaption>
+        <video width="200" height="200" controls>
+            <source src="./drag_diffusion_resources/oilpaint_mountain.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="video-with-text">
+        <figcaption style="font-size:20px">dragging trajectory</figcaption>
+        <video width="200" height="200" controls>
+            <source src="./drag_diffusion_resources/cat_dog.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <br>
+    <br>
     <hr>
+
 
     <h1>Dragging Trajectories (Generated Images)</h1>
     <div class="img-with-text">
@@ -135,104 +242,6 @@
     <br>
     <hr>
 
-    <h1>Dragging Trajectories (Real Images)</h1>
-    <div class="img-with-text">
-        <figcaption style="font-size:20px">user edit</figcaption>
-        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_dog.png"/>
-    </div>
-    <div class="img-with-text">
-        <figcaption style="font-size:20px">user edit</figcaption>
-        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_sculpture.png"/>
-    </div>
-    <div class="img-with-text">
-        <figcaption style="font-size:20px">user edit</figcaption>
-        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_oilpaint.png"/>
-    </div>
-    <div class="img-with-text">
-        <figcaption style="font-size:20px">user edit</figcaption>
-        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_oilpaint_mountain.png"/>
-    </div>
-    <div class="img-with-text">
-        <figcaption style="font-size:20px">user edit</figcaption>
-        <img width="200" height="200" src="./drag_diffusion_resources/user_edit_cat_dog.png"/>
-    </div>
-
-    <br><br>
-
-    <div class="video-with-text">
-        <figcaption style="font-size:20px">dragging trajectory</figcaption>
-        <video width="200" height="200" controls>
-            <source src="./drag_diffusion_resources/dog.mp4" type="video/mp4">
-        </video>
-    </div>
-    <div class="video-with-text">
-        <figcaption style="font-size:20px">dragging trajectory</figcaption>
-        <video width="200" height="200" controls>
-            <source src="./drag_diffusion_resources/sculpture.mp4" type="video/mp4">
-        </video>
-    </div>
-    <div class="video-with-text">
-        <figcaption style="font-size:20px">dragging trajectory</figcaption>
-        <video width="200" height="200" controls>
-            <source src="./drag_diffusion_resources/oilpaint_shorter.mp4" type="video/mp4">
-        </video>
-    </div>
-    <div class="video-with-text">
-        <figcaption style="font-size:20px">dragging trajectory</figcaption>
-        <video width="200" height="200" controls>
-            <source src="./drag_diffusion_resources/oilpaint_mountain.mp4" type="video/mp4">
-        </video>
-    </div>
-    <div class="video-with-text">
-        <figcaption style="font-size:20px">dragging trajectory</figcaption>
-        <video width="200" height="200" controls>
-            <source src="./drag_diffusion_resources/cat_dog.mp4" type="video/mp4">
-        </video>
-    </div>
-
-    <br>
-    <br>
-    <hr>
-
-    <!--
-    <div class="video-with-text">
-        <video width="1000" height="563" controls>
-            <source src="./drag_diffusion_resources/clip_merge.mp4" type="video/mp4">
-        </video>
-    </div>
-    <br><br>
-    <p style="width: 80%;text-align: center">
-        Given an input image, the user clicks handle points (<font color="red">red</font>),
-        target points (<font color="blue">blue</font>) and
-        draw a mask specifying editable region
-        (<font color="gray">brighter areas</font>).
-    </p>
-    <br><br>
-    <hr>
-    -->
-
-    <!--
-    <h1>Method Overview</h1>
-    <img style="width: 80%;" src="./drag_diffusion_resources/method_v3.jpg"
-         alt="Method overview figure"/>
-    <br>
-    <p style="width: 80%;text-align: justify">
-        Overview of DragDiffusion.
-        As shown in part (A), we first finetune a LoRA on parameters of the UNet to reconstruct
-        the user input image before editing.
-        Next, part (B) illustrates the detailed editing process.
-        Specifically, we first apply a DDIM inversion on the input image
-        and obtain the latent at a certain time step.
-        Then, based on the user editing instructions (i.e., handle points, target points, and mask),
-        we optimize the inverted latent to supervise handle points to move to target points.
-        Finally, DDIM denoising is applied on the optimized latent to obtain
-        the final editing result.
-    </p>
-
-    <br><br>
-
-    <hr>
-    -->
 
     <h1>More Dragging Results</h1>
     <h2>General objects</h2>
